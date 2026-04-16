@@ -252,6 +252,26 @@ function loadTasks(){
 }
 
 loadTasks();
+    // 💾 SALVAR ESTADO DO POMODORO
+function saveState(){
+    localStorage.setItem("pomodoro", JSON.stringify({
+        time,
+        total,
+        isWork
+    }));
+}
+
+function loadState(){
+    let data = JSON.parse(localStorage.getItem("pomodoro"));
+
+    if(data){
+        time = data.time;
+        total = data.total;
+        isWork = data.isWork;
+    }
+}
+
+loadState();
 function toggleRain(){
     let r = document.getElementById("rain");
     
