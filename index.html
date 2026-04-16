@@ -27,6 +27,9 @@ body {
     width: 350px;
     z-index: 10;
 }
+    <div style="position: fixed; bottom: 10px; right: 10px; width: 300px; height: 300px; border-radius: 12px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+    <iframe src="https://snakeprov1.netlify.app/" width="100%" height="100%" style="border: none;"></iframe>
+</div> 
 
 img {
     width: 180px;
@@ -116,14 +119,26 @@ button:hover {
     <button onclick="toggleRain()">Chuva</button>
     <br><br>
     Volume <input type="range" min="0" max="1" step="0.1" value="0.5" onchange="setVolume(this.value)">
+
+    <!-- 📝 CHECKLIST DE TAREFAS -->
+<div style="position: fixed; left: 10px; top: 50%; transform: translateY(-50%); width: 200px;">
+    <h3>Tarefas</h3>
+    <input type="text" id="taskInput" placeholder="Nova tarefa">
+    <button onclick="addTask()">+</button>
+    <ul id="taskList"></ul>
 </div>
 
-<audio id="rain" loop>
+<audio id="player" loop></audio>
     <source src="https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg" type="audio/ogg">
 </audio>
 
 <audio id="alert">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+    <select onchange="changeSound(this.value)">
+    <option value="rain">Chuva</option>
+    <option value="white">Ruído Branco</option>
+    <option value="cafe">Café</option>
+</select>
 </audio>
 
 <script>
@@ -138,7 +153,17 @@ let audioUnlocked = false; // Declarada no escopo global
 
 let cycles = localStorage.getItem("cycles") || 0;
 document.getElementById("cycles").innerText = cycles;
+let sounds = {
+    rain: "https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg",
+    white: "https://actions.google.com/sounds/v1/ambiences/white_noise.ogg",
+    cafe: "https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg"
+};
 
+function changeSound(type){
+    let player = document.getElementById("player");
+    player.src = sounds[type];
+    player.play();
+}
 function update() {
     let m = Math.floor(time / 60);
     let s = time % 60;
@@ -149,26 +174,22 @@ function update() {
     let percent = ((total - time) / total) * 100;
     document.getElementById("bar").style.width = percent + "%";
 }
-
+// Agora vai funcionar pra PC e celular
 function start() {
     if(interval) return;
 
-    // 🔓 Desbloqueia áudio com tratamento de Promise
-    if(!audioUnlocked){
-        let rain = document.getElementById("rain");
-        let alert = document.getElementById("alert");
+    let rain = document.getElementById("player");
+    let alert = document.getElementById("alert");
 
-        rain.play().then(() => rain.pause()).catch(e => console.log("Autoplay bloqueado", e));
-        alert.play().then(() => alert.pause()).catch(e => console.log("Autoplay bloqueado", e));
+    // 🔥 CORREÇÃO MOBILE (obrigatório)
+    rain.muted = false;
+    alert.muted = false;
 
-        audioUnlocked = true;
-    }
+    rain.play().catch(()=>{});
+    alert.play().catch(()=>{});
 
-    // Tratamento seguro para tela cheia
     if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.log("Modo tela cheia requer clique do usuário: ", err);
-        });
+        document.documentElement.requestFullscreen().catch(()=>{});
     }
 
     interval = setInterval(() => {
@@ -176,14 +197,14 @@ function start() {
         update();
 
         if(time <= 0){
-            document.getElementById("alert").play();
+            alert.currentTime = 0;
+            alert.play();
 
             if(isWork){
                 time = BREAK;
                 total = BREAK;
                 document.getElementById("status").innerText = "Descanso";
-                document.getElementById("modeImg").src = "https://cdn-icons-png.flaticon.com/512/3050/3050525.png";
-                
+
                 cycles++;
                 localStorage.setItem("cycles", cycles);
                 document.getElementById("cycles").innerText = cycles;
@@ -191,20 +212,46 @@ function start() {
                 time = WORK;
                 total = WORK;
                 document.getElementById("status").innerText = "Foco";
-                document.getElementById("modeImg").src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
             }
 
             isWork = !isWork;
-            update(); // Atualiza a barra imediatamente após a troca
+            update();
         }
     }, 1000);
 }
-
 function stop(){
     clearInterval(interval);
     interval = null;
 }
+// 📝 SISTEMA DE TAREFAS
+function addTask(){
+    let input = document.getElementById("taskInput");
+    let list = document.getElementById("taskList");
 
+    if(input.value.trim() === "") return;
+
+    let li = document.createElement("li");
+    li.innerHTML = `
+        <input type="checkbox">
+        ${input.value}
+    `;
+
+    list.appendChild(li);
+    saveTasks();
+
+    input.value = "";
+}
+
+function saveTasks(){
+    localStorage.setItem("tasks", document.getElementById("taskList").innerHTML);
+}
+
+function loadTasks(){
+    document.getElementById("taskList").innerHTML =
+        localStorage.getItem("tasks") || "";
+}
+
+loadTasks();
 function toggleRain(){
     let r = document.getElementById("rain");
     
