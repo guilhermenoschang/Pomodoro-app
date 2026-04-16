@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 
 <meta name="theme-color" content="#0f172a">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
 /* 🎨 ESTILOS BASE */
@@ -83,6 +83,8 @@ button {
     color: white;
     font-weight: bold;
     transition: background 0.2s;
+    /* Ajuste para não dar zoom no duplo clique em mobile */
+    touch-action: manipulation; 
 }
 
 button:hover {
@@ -214,11 +216,9 @@ button:hover {
 
 <body>
 
-<!-- ⚠️ AVISO DE DISTRAÇÃO -->
 <div class="warning" id="warning">⚠️ VOLTA PRO FOCO!</div>
 <div class="overlay" id="overlay"></div>
 
-<!-- 📝 CHECKLIST DE TAREFAS -->
 <div class="checklist">
     <h3>📋 Tarefas</h3>
     <input type="text" id="taskInput" placeholder="Nova tarefa...">
@@ -226,12 +226,10 @@ button:hover {
     <ul id="taskList"></ul>
 </div>
 
-<!-- 🎮 JOGO DA COBRA -->
 <div class="game-container">
     <iframe src="https://snakeprov1.netlify.app/" width="100%" height="100%" style="border: none;"></iframe>
 </div>
 
-<!-- 📦 CONTAINER PRINCIPAL -->
 <div class="container">
     <img id="modeImg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Modo">
 
@@ -246,11 +244,10 @@ button:hover {
 
     <br>
 
-    <button onclick="start()">▶ Iniciar</button>
-    <button onclick="stop()">⏸ Parar</button>
-    <button onclick="toggleRain()">🔊 Som</button>
+    <button onpointerdown="start()">▶ Iniciar</button>
+    <button onpointerdown="stop()">⏸ Parar</button>
+    <button onpointerdown="toggleRain()">🔊 Som</button>
 
-    <!-- 🎵 CONTROLES DE SOM -->
     <div class="sound-controls">
         <select onchange="changeSound(this.value)">
             <option value="rain">🌧️ Chuva</option>
@@ -264,10 +261,11 @@ button:hover {
     </div>
 </div>
 
-<!-- 🔊 ELEMENTOS DE ÁUDIO -->
-<audio id="player" loop></audio>
+<audio id="player" loop preload="auto">
+    <source src="https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg" type="audio/ogg">
+</audio>
 
-<audio id="alert">
+<audio id="alert" preload="auto">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
 </audio>
 
@@ -299,7 +297,7 @@ function changeSound(type){
     let player = document.getElementById("player");
     player.src = sounds[type];
     if (!player.paused) {
-        player.play();
+        player.play().catch(e => console.log("Bloqueado pelo mobile:", e));
     }
 }
 
@@ -315,28 +313,35 @@ function update() {
     document.getElementById("bar").style.width = percent + "%";
 }
 
-// ▶️ INICIAR POMODORO
+// ▶️ INICIAR POMODORO (AGORA AMIGÁVEL AO IOS/ANDROID)
 function start() {
     if(interval) return;
 
     let player = document.getElementById("player");
     let alert = document.getElementById("alert");
 
-    // 🔓 DESBLOQUEAR ÁUDIO (MOBILE)
+    // 🔓 DESBLOQUEAR ÁUDIO (MÉTODO BRUTO PARA MOBILE)
+    // No exato evento de touch/click, forçamos o play e o pause imediato.
     if(!audioUnlocked){
         player.muted = false;
         alert.muted = false;
-
-        player.play().then(() => player.pause()).catch(()=>{});
-        alert.play().then(() => alert.pause()).catch(()=>{});
+        
+        // Execução síncrona exigida pela Apple
+        player.play();
+        player.pause();
+        
+        alert.play();
+        alert.pause();
 
         audioUnlocked = true;
     }
 
-    // 🖥️ MODO TELA CHEIA
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(()=>{});
-    }
+    // 🖥️ MODO TELA CHEIA (Ignora erro no iOS)
+    try {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(()=>{});
+        }
+    } catch(e) {}
 
     // ⏱️ INICIAR CONTAGEM
     interval = setInterval(() => {
@@ -347,7 +352,8 @@ function start() {
         if(time <= 0){
             // 🔔 TOCAR ALERTA
             alert.currentTime = 0;
-            alert.play();
+            // Catch previne o crash do timer se o celular estiver em modo silencioso restrito
+            alert.play().catch(e => console.log("Alerta bloqueado:", e));
 
             if(isWork){
                 // 🎯 COMPLETOU UM CICLO
@@ -442,11 +448,7 @@ function toggleRain(){
     let player = document.getElementById("player");
     
     if (player.paused) {
-        // Se não tem fonte, define a padrão
-        if (!player.src) {
-            player.src = sounds.rain;
-        }
-        player.play();
+        player.play().catch(e => console.log("Play ambiente bloqueado:", e));
     } else {
         player.pause();
     }
@@ -460,7 +462,7 @@ function setVolume(v){
 
 // 🌗 APLICAR TEMA DO SISTEMA
 function applyTheme(){
-    if(window.matchMedia('(prefers-color-scheme: light)').matches){
+    if(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches){
         document.body.classList.add("light");
     }
 }
