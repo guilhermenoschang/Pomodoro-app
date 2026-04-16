@@ -2,13 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-
 <title>Pomodoro</title>
 
 <link rel="manifest" href="manifest.json">
 
 <meta name="theme-color" content="#0f172a">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* 🌗 MODO CLARO */
+.light {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+/* resto do teu CSS aqui */
+</style>
 </head>
 <style>
 body {
@@ -26,21 +35,26 @@ body {
     background: #f1f5f9;
     color: #0f172a;
 }
-.container {
-    text-align: center;
-    width: 350px;
-    z-index: 10;
-}
-    <!-- 📝 CHECKLIST DE TAREFAS -->
+        <!-- 📝 CHECKLIST DE TAREFAS -->
 <div style="position: fixed; left: 10px; top: 50%; transform: translateY(-50%); width: 200px;">
     <h3>Tarefas</h3>
     <input type="text" id="taskInput" placeholder="Nova tarefa">
     <button onclick="addTask()">+</button>
     <ul id="taskList"></ul>
 </div>
+.container {
+    text-align: center;
+    width: 350px;
+    z-index: 10;
+}
+<!-- 🎮 JOGO -->
+<div style="position: fixed; bottom: 10px; right: 10px; width: 300px; height: 300px;">
+    <iframe src="https://snakeprov1.netlify.app/" width="100%" height="100%"></iframe>
+</div>
     <div style="position: fixed; bottom: 10px; right: 10px; width: 300px; height: 300px; border-radius: 12px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
     <iframe src="https://snakeprov1.netlify.app/" width="100%" height="100%" style="border: none;"></iframe>
 </div> 
+    
 
 img {
     width: 180px;
@@ -140,18 +154,17 @@ button:hover {
 </div>
 
 <audio id="player" loop></audio>
-    <source src="https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg" type="audio/ogg">
-</audio>
 
 <audio id="alert">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
-    <select onchange="changeSound(this.value)">
+</audio>
+
+<select onchange="changeSound(this.value)">
     <option value="rain">Chuva</option>
     <option value="white">Ruído Branco</option>
     <option value="cafe">Café</option>
 </select>
-</audio>
-
+    
 <script>
 let WORK = 50 * 60;
 let BREAK = 10 * 60;
@@ -287,7 +300,7 @@ function loadState(){
 
 loadState();
 function toggleRain(){
-    let r = document.getElementById("rain");
+    let r = document.getElementById("player");
     
     if (r.paused) {
         r.play();
@@ -304,7 +317,7 @@ function applyTheme(){
 
 applyTheme();
 function setVolume(v){
-    document.getElementById("rain").volume = v;
+    document.getElementById("player").volume = v;
     document.getElementById("alert").volume = v;
 }
 
