@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Pomodoro</title>
+<title>Pomodoro PRO</title>
 
 <link rel="manifest" href="manifest.json">
 
@@ -10,16 +10,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* 🌗 MODO CLARO */
-.light {
-    background: #f1f5f9;
-    color: #0f172a;
-}
-
-/* resto do teu CSS aqui */
-</style>
-</head>
-<style>
+/* 🎨 ESTILOS BASE */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -28,45 +19,43 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
 }
+
 /* 🌗 MODO CLARO */
 .light {
     background: #f1f5f9;
     color: #0f172a;
 }
-        <!-- 📝 CHECKLIST DE TAREFAS -->
-<div style="position: fixed; left: 10px; top: 50%; transform: translateY(-50%); width: 200px;">
-    <h3>Tarefas</h3>
-    <input type="text" id="taskInput" placeholder="Nova tarefa">
-    <button onclick="addTask()">+</button>
-    <ul id="taskList"></ul>
-</div>
+
+/* 📦 CONTAINER PRINCIPAL */
 .container {
     text-align: center;
-    width: 350px;
+    width: 90%;
+    max-width: 350px;
     z-index: 10;
 }
-<!-- 🎮 JOGO -->
-<div style="position: fixed; bottom: 10px; right: 10px; width: 300px; height: 300px;">
-    <iframe src="https://snakeprov1.netlify.app/" width="100%" height="100%"></iframe>
-</div>
-    <div style="position: fixed; bottom: 10px; right: 10px; width: 300px; height: 300px; border-radius: 12px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
-    <iframe src="https://snakeprov1.netlify.app/" width="100%" height="100%" style="border: none;"></iframe>
-</div> 
-    
 
+/* 🖼️ IMAGENS */
 img {
     width: 180px;
     margin-bottom: 10px;
     transition: opacity 0.5s ease;
 }
 
+/* ⏱️ TIMER */
 #timer {
-    font-size: 70px;
+    font-size: clamp(50px, 10vw, 70px);
     font-weight: bold;
+    margin: 10px 0;
 }
 
+#status {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+/* 📊 BARRA DE PROGRESSO */
 #progress {
     height: 8px;
     background: #1e293b;
@@ -83,6 +72,7 @@ img {
     transition: width 1s linear;
 }
 
+/* 🔘 BOTÕES */
 button {
     margin: 5px;
     padding: 10px 15px;
@@ -99,6 +89,7 @@ button:hover {
     background: #475569;
 }
 
+/* ⚠️ AVISO DE FOCO */
 .warning {
     position: fixed;
     top: 0;
@@ -112,6 +103,7 @@ button:hover {
     z-index: 100;
 }
 
+/* 🌑 OVERLAY DE DISTRAÇÃO */
 .overlay {
     position: fixed;
     inset: 0;
@@ -119,75 +111,199 @@ button:hover {
     display: none;
     z-index: 50;
 }
+
+/* 📝 CHECKLIST */
+.checklist {
+    position: fixed;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 200px;
+    background: rgba(30, 41, 59, 0.8);
+    padding: 15px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.checklist h3 {
+    margin-top: 0;
+    font-size: 1rem;
+}
+
+.checklist input[type="text"] {
+    width: calc(100% - 40px);
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.checklist ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.checklist li {
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* 🎮 JOGO */
+.game-container {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 280px;
+    height: 280px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* 🎵 CONTROLES DE SOM */
+.sound-controls {
+    margin-top: 15px;
+}
+
+.sound-controls select {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: none;
+    background: #334155;
+    color: white;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.sound-controls input[type="range"] {
+    width: 150px;
+    vertical-align: middle;
+}
+
+/* 📱 RESPONSIVIDADE */
+@media (max-width: 768px) {
+    .checklist {
+        width: 150px;
+        left: 5px;
+        font-size: 0.9rem;
+    }
+    
+    .game-container {
+        width: 200px;
+        height: 200px;
+        bottom: 5px;
+        right: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .checklist {
+        display: none;
+    }
+    
+    .game-container {
+        width: 150px;
+        height: 150px;
+    }
+}
 </style>
 </head>
 
 <body>
 
+<!-- ⚠️ AVISO DE DISTRAÇÃO -->
 <div class="warning" id="warning">⚠️ VOLTA PRO FOCO!</div>
 <div class="overlay" id="overlay"></div>
 
+<!-- 📝 CHECKLIST DE TAREFAS -->
+<div class="checklist">
+    <h3>📋 Tarefas</h3>
+    <input type="text" id="taskInput" placeholder="Nova tarefa...">
+    <button onclick="addTask()">+</button>
+    <ul id="taskList"></ul>
+</div>
+
+<!-- 🎮 JOGO DA COBRA -->
+<div class="game-container">
+    <iframe src="https://snakeprov1.netlify.app/" width="100%" height="100%" style="border: none;"></iframe>
+</div>
+
+<!-- 📦 CONTAINER PRINCIPAL -->
 <div class="container">
     <img id="modeImg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Modo">
 
     <div id="status">Foco</div>
     <div id="timer">50:00</div>
 
-    <div id="progress"><div id="bar"></div></div>
+    <div id="progress">
+        <div id="bar"></div>
+    </div>
 
-    <div>Ciclos: <span id="cycles">0</span></div>
+    <div>Ciclos completos: <span id="cycles">0</span></div>
 
     <br>
 
-    <button onclick="start()">Start</button>
-    <button onclick="stop()">Stop</button>
-    <button onclick="toggleRain()">Chuva</button>
-    <br><br>
-    Volume <input type="range" min="0" max="1" step="0.1" value="0.5" onchange="setVolume(this.value)">
+    <button onclick="start()">▶ Iniciar</button>
+    <button onclick="stop()">⏸ Parar</button>
+    <button onclick="toggleRain()">🔊 Som</button>
 
-    <!-- 📝 CHECKLIST DE TAREFAS -->
-<div style="position: fixed; left: 10px; top: 50%; transform: translateY(-50%); width: 200px;">
-    <h3>Tarefas</h3>
-    <input type="text" id="taskInput" placeholder="Nova tarefa">
-    <button onclick="addTask()">+</button>
-    <ul id="taskList"></ul>
+    <!-- 🎵 CONTROLES DE SOM -->
+    <div class="sound-controls">
+        <select onchange="changeSound(this.value)">
+            <option value="rain">🌧️ Chuva</option>
+            <option value="white">📻 Ruído Branco</option>
+            <option value="cafe">☕ Café</option>
+        </select>
+        
+        <br><br>
+        
+        Volume: <input type="range" min="0" max="1" step="0.1" value="0.5" onchange="setVolume(this.value)">
+    </div>
 </div>
 
+<!-- 🔊 ELEMENTOS DE ÁUDIO -->
 <audio id="player" loop></audio>
 
 <audio id="alert">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
 </audio>
 
-<select onchange="changeSound(this.value)">
-    <option value="rain">Chuva</option>
-    <option value="white">Ruído Branco</option>
-    <option value="cafe">Café</option>
-</select>
-    
 <script>
+// ⏱️ CONFIGURAÇÕES DE TEMPO
 let WORK = 50 * 60;
 let BREAK = 10 * 60;
 
+// 📊 ESTADO DO POMODORO
 let time = WORK;
 let total = WORK;
 let isWork = true;
-let interval;
-let audioUnlocked = false; // Declarada no escopo global
+let interval = null;
+let audioUnlocked = false;
 
-let cycles = localStorage.getItem("cycles") || 0;
+// 📈 CICLOS
+let cycles = parseInt(localStorage.getItem("cycles")) || 0;
 document.getElementById("cycles").innerText = cycles;
+
+// 🎵 BIBLIOTECA DE SONS
 let sounds = {
     rain: "https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg",
     white: "https://actions.google.com/sounds/v1/ambiences/white_noise.ogg",
     cafe: "https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg"
 };
 
+// 🎵 TROCAR SOM
 function changeSound(type){
     let player = document.getElementById("player");
     player.src = sounds[type];
-    player.play();
+    if (!player.paused) {
+        player.play();
+    }
 }
+
+// 📊 ATUALIZAR INTERFACE
 function update() {
     let m = Math.floor(time / 60);
     let s = time % 60;
@@ -198,45 +314,57 @@ function update() {
     let percent = ((total - time) / total) * 100;
     document.getElementById("bar").style.width = percent + "%";
 }
-// Agora vai funcionar pra PC e celular
+
+// ▶️ INICIAR POMODORO
 function start() {
     if(interval) return;
 
-    let rain = document.getElementById("player");
+    let player = document.getElementById("player");
     let alert = document.getElementById("alert");
 
-    // 🔥 CORREÇÃO MOBILE (obrigatório)
-    rain.muted = false;
-    alert.muted = false;
+    // 🔓 DESBLOQUEAR ÁUDIO (MOBILE)
+    if(!audioUnlocked){
+        player.muted = false;
+        alert.muted = false;
 
-    rain.play().catch(()=>{});
-    alert.play().catch(()=>{});
+        player.play().then(() => player.pause()).catch(()=>{});
+        alert.play().then(() => alert.pause()).catch(()=>{});
 
+        audioUnlocked = true;
+    }
+
+    // 🖥️ MODO TELA CHEIA
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(()=>{});
     }
 
+    // ⏱️ INICIAR CONTAGEM
     interval = setInterval(() => {
         time--;
-        update()
+        update();
         saveState();
 
         if(time <= 0){
+            // 🔔 TOCAR ALERTA
             alert.currentTime = 0;
             alert.play();
 
             if(isWork){
+                // 🎯 COMPLETOU UM CICLO
                 time = BREAK;
                 total = BREAK;
                 document.getElementById("status").innerText = "Descanso";
+                document.getElementById("modeImg").src = "https://cdn-icons-png.flaticon.com/512/3050/3050525.png";
 
                 cycles++;
                 localStorage.setItem("cycles", cycles);
                 document.getElementById("cycles").innerText = cycles;
             } else {
+                // 🔄 VOLTA PRO FOCO
                 time = WORK;
                 total = WORK;
                 document.getElementById("status").innerText = "Foco";
+                document.getElementById("modeImg").src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
             }
 
             isWork = !isWork;
@@ -244,12 +372,14 @@ function start() {
         }
     }, 1000);
 }
+
+// ⏸️ PARAR POMODORO
 function stop(){
     clearInterval(interval);
     interval = null;
 }
-// 📝 SISTEMA DE TAREFAS
-// 📝 SISTEMA DE TAREFAS
+
+// 📝 ADICIONAR TAREFA
 function addTask(){
     let input = document.getElementById("taskInput");
     let list = document.getElementById("taskList");
@@ -258,7 +388,7 @@ function addTask(){
 
     let li = document.createElement("li");
     li.innerHTML = `
-        <input type="checkbox">
+        <input type="checkbox" onchange="saveTasks()">
         ${input.value}
     `;
 
@@ -268,18 +398,18 @@ function addTask(){
     input.value = "";
 }
 
-
+// 💾 SALVAR TAREFAS
 function saveTasks(){
     localStorage.setItem("tasks", document.getElementById("taskList").innerHTML);
 }
 
+// 📂 CARREGAR TAREFAS
 function loadTasks(){
     document.getElementById("taskList").innerHTML =
         localStorage.getItem("tasks") || "";
 }
 
-loadTasks();
-    // 💾 SALVAR ESTADO DO POMODORO
+// 💾 SALVAR ESTADO DO POMODORO
 function saveState(){
     localStorage.setItem("pomodoro", JSON.stringify({
         time,
@@ -288,42 +418,56 @@ function saveState(){
     }));
 }
 
+// 📂 CARREGAR ESTADO DO POMODORO
 function loadState(){
-    let data = JSON.parse(localStorage.getItem("pomodoro"));
-
-    if(data){
-        time = data.time;
-        total = data.total;
-        isWork = data.isWork;
+    try {
+        let data = JSON.parse(localStorage.getItem("pomodoro") || "null");
+        if(data){
+            time = data.time;
+            total = data.total;
+            isWork = data.isWork;
+            
+            document.getElementById("status").innerText = isWork ? "Foco" : "Descanso";
+            document.getElementById("modeImg").src = isWork 
+                ? "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                : "https://cdn-icons-png.flaticon.com/512/3050/3050525.png";
+        }
+    } catch(e) {
+        console.log("Erro ao carregar estado:", e);
     }
 }
 
-loadState();
+// 🔊 LIGAR/DESLIGAR SOM
 function toggleRain(){
-    let r = document.getElementById("player");
+    let player = document.getElementById("player");
     
-    if (r.paused) {
-        r.play();
+    if (player.paused) {
+        // Se não tem fonte, define a padrão
+        if (!player.src) {
+            player.src = sounds.rain;
+        }
+        player.play();
     } else {
-        r.pause();
+        player.pause();
     }
 }
-// 🌗 DETECTA TEMA DO SISTEMA
+
+// 🎚️ AJUSTAR VOLUME
+function setVolume(v){
+    document.getElementById("player").volume = v;
+    document.getElementById("alert").volume = v;
+}
+
+// 🌗 APLICAR TEMA DO SISTEMA
 function applyTheme(){
     if(window.matchMedia('(prefers-color-scheme: light)').matches){
         document.body.classList.add("light");
     }
 }
 
-applyTheme();
-function setVolume(v){
-    document.getElementById("player").volume = v;
-    document.getElementById("alert").volume = v;
-}
-
-/* DETECTAR SAÍDA DA ABA */
+// ⚠️ DETECTAR SAÍDA DA ABA
 document.addEventListener("visibilitychange", () => {
-    if(document.hidden && isWork){
+    if(document.hidden && isWork && interval){
         document.getElementById("warning").style.display = "block";
         document.getElementById("overlay").style.display = "block";
     } else {
@@ -332,10 +476,17 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
+// 🚀 INICIALIZAÇÃO
+loadTasks();
+loadState();
+applyTheme();
 update();
+
+// 📱 REGISTRAR SERVICE WORKER (PWA)
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js')
-    .then(() => console.log('SW registrado'));
+    navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('✅ Service Worker registrado'))
+        .catch(err => console.log('❌ Erro no Service Worker:', err));
 }
 </script>
 
