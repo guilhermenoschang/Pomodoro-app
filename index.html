@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+
+<title>Pomodoro</title>
+
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#0f172a">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    text-align: center;
+    width: 350px;
+    z-index: 10;
+}
+
+img {
+    width: 180px;
+    margin-bottom: 10px;
+    transition: opacity 0.5s ease;
+}
+
+#timer {
+    font-size: 70px;
+    font-weight: bold;
+}
+
+#progress {
+    height: 8px;
+    background: #1e293b;
+    border-radius: 10px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+#bar {
+    height: 100%;
+    width: 0%;
+    background: #22c55e;
+    border-radius: 10px;
+    transition: width 1s linear;
+}
+
+button {
+    margin: 5px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #334155;
+    color: white;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #475569;
+}
+
+.warning {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: #ef4444;
+    text-align: center;
+    padding: 15px 0;
+    font-weight: bold;
+    font-size: 1.2rem;
+    display: none;
+    z-index: 100;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    z-index: 50;
+}
+</style>
+</head>
+
+<body>
+
+<div class="warning" id="warning">⚠️ VOLTA PRO FOCO!</div>
+<div class="overlay" id="overlay"></div>
+
+<div class="container">
+    <img id="modeImg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Modo">
+
+    <div id="status">Foco</div>
+    <div id="timer">50:00</div>
+
+    <div id="progress"><div id="bar"></div></div>
+
+    <div>Ciclos: <span id="cycles">0</span></div>
+
+    <br>
+
+    <button onclick="start()">Start</button>
+    <button onclick="stop()">Stop</button>
+    <button onclick="toggleRain()">Chuva</button>
+    <br><br>
+    Volume <input type="range" min="0" max="1" step="0.1" value="0.5" onchange="setVolume(this.value)">
+</div>
+
+<audio id="rain" loop>
+    <source src="https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg" type="audio/ogg">
+</audio>
+
+<audio id="alert">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
+
+<script>
+let WORK = 50 * 60;
+let BREAK = 10 * 60;
+
+let time = WORK;
+let total = WORK;
+let isWork = true;
+let interval;
+let audioUnlocked = false; // Declarada no escopo global
+
+let cycles = localStorage.getItem("cycles") || 0;
+document.getElementById("cycles").innerText = cycles;
+
+function update() {
+    let m = Math.floor(time / 60);
+    let s = time % 60;
+
+    document.getElementById("timer").innerText =
+        `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    let percent = ((total - time) / total) * 100;
+    document.getElementById("bar").style.width = percent + "%";
+}
+
+function start() {
+    if(interval) return;
+
+    // 🔓 Desbloqueia áudio com tratamento de Promise
+    if(!audioUnlocked){
+        let rain = document.getElementById("rain");
+        let alert = document.getElementById("alert");
+
+        rain.play().then(() => rain.pause()).catch(e => console.log("Autoplay bloqueado", e));
+        alert.play().then(() => alert.pause()).catch(e => console.log("Autoplay bloqueado", e));
+
+        audioUnlocked = true;
+    }
+
+    // Tratamento seguro para tela cheia
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log("Modo tela cheia requer clique do usuário: ", err);
+        });
+    }
+
+    interval = setInterval(() => {
+        time--;
+        update();
+
+        if(time <= 0){
+            document.getElementById("alert").play();
+
+            if(isWork){
+                time = BREAK;
+                total = BREAK;
+                document.getElementById("status").innerText = "Descanso";
+                document.getElementById("modeImg").src = "https://cdn-icons-png.flaticon.com/512/3050/3050525.png";
+                
+                cycles++;
+                localStorage.setItem("cycles", cycles);
+                document.getElementById("cycles").innerText = cycles;
+            } else {
+                time = WORK;
+                total = WORK;
+                document.getElementById("status").innerText = "Foco";
+                document.getElementById("modeImg").src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+            }
+
+            isWork = !isWork;
+            update(); // Atualiza a barra imediatamente após a troca
+        }
+    }, 1000);
+}
+
+function stop(){
+    clearInterval(interval);
+    interval = null;
+}
+
+function toggleRain(){
+    let r = document.getElementById("rain");
+    
+    if (r.paused) {
+        r.play();
+    } else {
+        r.pause();
+    }
+}
+
+function setVolume(v){
+    document.getElementById("rain").volume = v;
+    document.getElementById("alert").volume = v;
+}
+
+/* DETECTAR SAÍDA DA ABA */
+document.addEventListener("visibilitychange", () => {
+    if(document.hidden && isWork){
+        document.getElementById("warning").style.display = "block";
+        document.getElementById("overlay").style.display = "block";
+    } else {
+        document.getElementById("warning").style.display = "none";
+        document.getElementById("overlay").style.display = "none";
+    }
+});
+
+update();
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => console.log('SW registrado'));
+}
+</script>
+
+</body>
+</html>
