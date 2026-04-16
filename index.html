@@ -21,7 +21,11 @@ body {
     align-items: center;
     height: 100vh;
 }
-
+/* 🌗 MODO CLARO */
+.light {
+    background: #f1f5f9;
+    color: #0f172a;
+}
 .container {
     text-align: center;
     width: 350px;
@@ -201,7 +205,8 @@ function start() {
 
     interval = setInterval(() => {
         time--;
-        update();
+        update()
+        saveState();
 
         if(time <= 0){
             alert.currentTime = 0;
@@ -250,16 +255,6 @@ function addTask(){
     input.value = "";
 }
 
-function saveTasks(){
-    localStorage.setItem("tasks", document.getElementById("taskList").innerHTML);
-}
-
-function loadTasks(){
-    document.getElementById("taskList").innerHTML =
-        localStorage.getItem("tasks") || "";
-}
-
-loadTasks();
 
 function saveTasks(){
     localStorage.setItem("tasks", document.getElementById("taskList").innerHTML);
@@ -300,7 +295,14 @@ function toggleRain(){
         r.pause();
     }
 }
+// 🌗 DETECTA TEMA DO SISTEMA
+function applyTheme(){
+    if(window.matchMedia('(prefers-color-scheme: light)').matches){
+        document.body.classList.add("light");
+    }
+}
 
+applyTheme();
 function setVolume(v){
     document.getElementById("rain").volume = v;
     document.getElementById("alert").volume = v;
